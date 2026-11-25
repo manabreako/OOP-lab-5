@@ -3,11 +3,37 @@
 #include <list>
 #include <unordered_map>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 using namespace std;
 
+// Общий шаблон перемещения
+template <typename T>
+struct ValueMover {
+    static T moveValue(T value) {
+        return value;
+    }
+};
+
+// Специализация для string
+template <>
+struct ValueMover<string> {
+    static string moveValue(string value) {
+        return std::move(value);
+    }
+};
+
 template <typename K, typename V, size_t Capacity>
 class LRUCache {
+    static_assert(is_arithmetic_v<K> || is_same_v<K, string>,
+                  "Unsupported key type");
+
+    static_assert(is_arithmetic_v<V> || is_same_v<V, string>,
+                  "Unsupported value type");
+
+    static_assert(Capacity > 0, "Capacity must be positive");
+
 private:
     using Item = pair<K, V>;
 
@@ -15,11 +41,13 @@ private:
     unordered_map<K, typename list<Item>::iterator> index;
 
 public:
-    void put(const K& key, const V& value) {
+    void put(const K& key, V value) {
         auto it = index.find(key);
 
         if (it != index.end()) {
-            it->second->second = value;
+            it->second->second =
+                ValueMover<V>::moveValue(std::move(value));
+
             cache.splice(cache.begin(), cache, it->second);
             return;
         }
@@ -29,7 +57,10 @@ public:
             cache.pop_back();
         }
 
-        cache.emplace_front(key, value);
+        cache.emplace_front(
+            key, ValueMover<V>::moveValue(std::move(value))
+        );
+
         index[key] = cache.begin();
     }
 
