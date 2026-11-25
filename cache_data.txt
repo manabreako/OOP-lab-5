@@ -1,0 +1,10 @@
+1 Apple
+2 Banana
+3 Orange
+4 Potato
+5 Tomato
+6 Carrot
+7 Cucumber
+8 Cherry
+9 Grape
+10 Melon
