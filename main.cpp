@@ -5,10 +5,10 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 using namespace std;
 
-// Общий шаблон перемещения
 template <typename T>
 struct ValueMover {
     static T moveValue(T value) {
@@ -16,7 +16,6 @@ struct ValueMover {
     }
 };
 
-// Специализация для string
 template <>
 struct ValueMover<string> {
     static string moveValue(string value) {
@@ -85,7 +84,44 @@ public:
         cache.clear();
         index.clear();
     }
+
+    template <typename A, typename B, size_t N>
+    friend ostream& operator<<(ostream& out,
+                               const LRUCache<A, B, N>& obj);
 };
+
+// Дружественная функция вывода
+template <typename K, typename V, size_t N>
+ostream& operator<<(ostream& out, const LRUCache<K, V, N>& obj) {
+    out << "LRU Cache:\n";
+
+    for (const auto& item : obj.cache) {
+        out << item.first << " : " << item.second << '\n';
+    }
+
+    return out;
+}
+
+// Массовое заполнение кэша
+template <typename K, typename V, size_t N>
+void fillCache(LRUCache<K, V, N>& cache,
+               const vector<pair<K, V>>& data) {
+    for (const auto& item : data) {
+        cache.put(item.first, item.second);
+    }
+}
+
+// Обычная шаблонная функция
+template <typename T>
+void printItem(const T& value) {
+    cout << value;
+}
+
+// Специализация для string
+template <>
+void printItem<string>(const string& value) {
+    cout << "[Строка] " << value;
+}
 
 int main() {
     LRUCache<int, string, 5> cache;
@@ -93,13 +129,14 @@ int main() {
     cache.put(1, "Apple");
     cache.put(2, "Banana");
 
-    string value;
+    vector<pair<int, string>> data = {
+        {3, "Orange"},
+        {4, "Potato"}
+    };
 
-    if (cache.get(1, value)) {
-        cout << "Found: " << value << '\n';
-    }
+    fillCache(cache, data);
 
-    cout << "Cache size: " << cache.size() << '\n';
+    cout << cache;
 
     return 0;
 }
