@@ -39,6 +39,9 @@ private:
     list<Item> cache;
     unordered_map<K, typename list<Item>::iterator> index;
 
+    inline static size_t hits = 0;
+    inline static size_t misses = 0;
+
 public:
     void put(const K& key, V value) {
         auto it = index.find(key);
@@ -67,8 +70,11 @@ public:
         auto it = index.find(key);
 
         if (it == index.end()) {
+            misses++;
             return false;
         }
+
+        hits++;
 
         cache.splice(cache.begin(), cache, it->second);
         value = it->second->second;
@@ -85,12 +91,19 @@ public:
         index.clear();
     }
 
+    static size_t getHits() {
+        return hits;
+    }
+
+    static size_t getMisses() {
+        return misses;
+    }
+
     template <typename A, typename B, size_t N>
     friend ostream& operator<<(ostream& out,
                                const LRUCache<A, B, N>& obj);
 };
 
-// Дружественная функция вывода
 template <typename K, typename V, size_t N>
 ostream& operator<<(ostream& out, const LRUCache<K, V, N>& obj) {
     out << "LRU Cache:\n";
@@ -102,7 +115,6 @@ ostream& operator<<(ostream& out, const LRUCache<K, V, N>& obj) {
     return out;
 }
 
-// Массовое заполнение кэша
 template <typename K, typename V, size_t N>
 void fillCache(LRUCache<K, V, N>& cache,
                const vector<pair<K, V>>& data) {
@@ -111,13 +123,11 @@ void fillCache(LRUCache<K, V, N>& cache,
     }
 }
 
-// Обычная шаблонная функция
 template <typename T>
 void printItem(const T& value) {
     cout << value;
 }
 
-// Специализация для string
 template <>
 void printItem<string>(const string& value) {
     cout << "[Строка] " << value;
@@ -126,17 +136,23 @@ void printItem<string>(const string& value) {
 int main() {
     LRUCache<int, string, 5> cache;
 
-    cache.put(1, "Apple");
-    cache.put(2, "Banana");
-
     vector<pair<int, string>> data = {
-        {3, "Orange"},
-        {4, "Potato"}
+        {1, "Apple"},
+        {2, "Banana"},
+        {3, "Orange"}
     };
 
     fillCache(cache, data);
 
+    string value;
+
+    cache.get(1, value);
+    cache.get(100, value);
+
     cout << cache;
+
+    cout << "Hits: " << cache.getHits() << '\n';
+    cout << "Misses: " << cache.getMisses() << '\n';
 
     return 0;
 }
